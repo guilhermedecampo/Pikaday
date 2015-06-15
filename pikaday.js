@@ -394,9 +394,21 @@
         var self = this,
             opts = self.config(options);
 
-        self._onMouseDown = function(e)
+        var dragging = false;
+
+        self._onTouchMove = function(e)
         {
-            if (!self._v) {
+            dragging = true;
+        };
+
+        self._onTouchStart = function(e)
+        {
+            dragging = false;
+        };
+
+        self._onTouchEnd = function(e)
+        {
+            if (!self._v || dragging) {
                 return;
             }
             e = e || window.event;
@@ -539,7 +551,9 @@
         self.el = document.createElement('div');
         self.el.className = 'pika-single' + (opts.isRTL ? ' is-rtl' : '') + (opts.theme ? ' ' + opts.theme : '');
 
-        addEvent(self.el, 'ontouchend' in document ? 'touchend' : 'mousedown', self._onMouseDown, true);
+        addEvent(self.el, 'touchend', self._onTouchEnd, true);
+        addEvent(self.el, 'touchmove', self._onTouchMove, true);
+        addEvent(self.el, 'touchstart', self._onTouchStart, true);
         addEvent(self.el, 'change', self._onChange);
         addEvent(self.el, 'click', self._captureEvent);
         addEvent(self.el, 'touchend', self._captureEvent);
@@ -897,11 +911,11 @@
         adjustPosition: function()
         {
             var field, pEl, width, height, viewportWidth, viewportHeight, scrollTop, left, top, clientRect;
-            
+
             if (this._o.container) return;
-            
+
             this.el.style.position = 'absolute';
-            
+
             field = this._o.trigger;
             pEl = field;
             width = this.el.offsetWidth;
@@ -1039,7 +1053,9 @@
         destroy: function()
         {
             this.hide();
-            removeEvent(this.el, 'mousedown', this._onMouseDown, true);
+            removeEvent(this.el, 'touchend', this._onTouchEnd, true);
+            removeEvent(this.el, 'touchmove', this._onTouchMove, true);
+            removeEvent(this.el, 'touchstart', this._onTouchStart, true);
             removeEvent(this.el, 'change', this._onChange);
             removeEvent(this.el, 'click', this._captureEvent);
             removeEvent(this.el, 'touchend', this._captureEvent);
