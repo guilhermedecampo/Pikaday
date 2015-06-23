@@ -186,16 +186,13 @@ http://nicolasgallagher.com/micro-clearfix-hack/
     opacity: .3;
 }
 
-.pika-button:hover {
-    color: #fff;
-    background: #ff8000;
-    box-shadow: none;
-    border-radius: 3px;
-}
-
 /* styling for abbr */
 .pika-table abbr {
     border-bottom: none;
     cursor: help;
 }
 
+.noscroll {
+    overflow: hidden;
+    touch-action: none;
+}

@@ -251,6 +251,7 @@
 
         // callback function
         onSelect: null,
+        onChange: null,
         onOpen: null,
         onClose: null,
         onDraw: null
@@ -394,21 +395,10 @@
         var self = this,
             opts = self.config(options);
 
-        var dragging = false;
-
-        self._onTouchMove = function(e)
+        self._onSelectClick = function(e)
         {
-            dragging = true;
-        };
-
-        self._onTouchStart = function(e)
-        {
-            dragging = false;
-        };
-
-        self._onTouchEnd = function(e)
-        {
-            if (!self._v || dragging) {
+            document.getElementsByTagName("html")[0].className = "";
+            if (!self._v) {
                 return;
             }
             e = e || window.event;
@@ -457,10 +447,30 @@
                 return;
             }
             if (hasClass(target, 'pika-select-month')) {
-                self.gotoMonth(target.value);
+                var value = parseInt(target.value) + 1;
+                value = value.toString().length < 2 ? '0'+value : value;
+
+                console.log('target', value);
+                var newDateMonth = self.getMoment()
+                    .month(target.value)
+                    .format('YYYY') + '-' + value + '-02';
+
+                console.log('this is the new date', newDateMonth);
+                self.setDate(newDateMonth);
             }
             else if (hasClass(target, 'pika-select-year')) {
-                self.gotoYear(target.value);
+                var newDateYear = self.getMoment()
+                    .year(target.value)
+                    .format('YYYY-MM') + '-02';
+                self.setDate(newDateYear);
+                console.log(newDateYear);
+            }
+
+            if (typeof self._o.onChange === 'function') {
+                var that = self;
+                sto(function() {
+                    that._o.onChange.call(self);
+                }, 0);
             }
         };
 
@@ -540,23 +550,11 @@
             }
         };
 
-        self._captureEvent = function(e) {
-            e = e || window.event;
-
-            if (e.stopPropagation) {
-                e.stopPropagation();
-            }
-        };
-
         self.el = document.createElement('div');
         self.el.className = 'pika-single' + (opts.isRTL ? ' is-rtl' : '') + (opts.theme ? ' ' + opts.theme : '');
 
-        addEvent(self.el, 'touchend', self._onTouchEnd, true);
-        addEvent(self.el, 'touchmove', self._onTouchMove, true);
-        addEvent(self.el, 'touchstart', self._onTouchStart, true);
+        addEvent(self.el, 'click', self._onSelectClick, true);
         addEvent(self.el, 'change', self._onChange);
-        addEvent(self.el, 'click', self._captureEvent);
-        addEvent(self.el, 'touchend', self._captureEvent);
 
         if (opts.field) {
             if (opts.container) {
@@ -1053,12 +1051,8 @@
         destroy: function()
         {
             this.hide();
-            removeEvent(this.el, 'touchend', this._onTouchEnd, true);
-            removeEvent(this.el, 'touchmove', this._onTouchMove, true);
-            removeEvent(this.el, 'touchstart', this._onTouchStart, true);
+            removeEvent(this.el, 'click', this._onClick, true);
             removeEvent(this.el, 'change', this._onChange);
-            removeEvent(this.el, 'click', this._captureEvent);
-            removeEvent(this.el, 'touchend', this._captureEvent);
             if (this._o.field) {
                 removeEvent(this._o.field, 'change', this._onInputChange);
                 if (this._o.bound) {
